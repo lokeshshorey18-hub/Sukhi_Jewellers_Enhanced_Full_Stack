@@ -141,6 +141,34 @@ def admin_site():
                 fn=secure_filename(f'hero_{secrets.token_hex(8)}.{ext}'); f.save(os.path.join(UPLOADS,fn)); c.execute('INSERT INTO hero_slides(title,subtitle,image_filename,sort_order) VALUES(?,?,?,?)',(request.form.get('hero_title',''),request.form.get('hero_subtitle',''),fn,0))
         c.commit(); c.close(); flash('Website settings saved.','success'); return redirect(url_for('admin_site'))
     settings=c.execute('SELECT * FROM site_settings WHERE id=1').fetchone(); slides=c.execute('SELECT * FROM hero_slides ORDER BY sort_order,id').fetchall(); c.close(); return render_template('admin_site.html',settings=settings,slides=slides)
+@app.route('/admin/site/hero/<int:sid>/delete', methods=['POST'])
+@admin_required
+def delete_hero(sid):
+    c = db()
+    slide = c.execute('SELECT image_filename FROM hero_slides WHERE id=?', (sid,)).fetchone()
+    if not slide:
+        c.close()
+        flash('Homepage image not found.', 'error')
+        return redirect(url_for('admin_site'))
+
+    filename = slide['image_filename']
+    c.execute('DELETE FROM hero_slides WHERE id=?', (sid,))
+    c.commit()
+    c.close()
+
+    # Delete the uploaded image file if it exists.
+    if filename:
+        filepath = os.path.join(UPLOADS, filename)
+        try:
+            if os.path.isfile(filepath):
+                os.remove(filepath)
+        except OSError:
+            pass
+
+    flash('Homepage image deleted.', 'success')
+    return redirect(url_for('admin_site'))
+
+
 @app.route('/admin/nav',methods=['GET','POST'])
 @admin_required
 def admin_nav():
@@ -155,7 +183,5 @@ def checkout():
     data=request.get_json(silent=True) or {}; amount=float(data.get('amount') or 0)
     if amount<=0:return jsonify(ok=False,error='Invalid amount'),400
     c=db(); cur=c.execute('INSERT INTO orders(customer_name,email,phone,amount,status,created_at) VALUES(?,?,?,?,?,?)',(data.get('name','Customer'),data.get('email',''),data.get('phone',''),amount,'Payment Pending',datetime.now().isoformat())); c.commit(); oid=cur.lastrowid; c.close(); return jsonify(ok=True,order_id=oid,message='Order created. Connect Razorpay server-side here.')
-init_db()
-
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

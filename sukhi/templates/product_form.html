@@ -1,0 +1,22 @@
+
+{% extends "base.html" %}{% block title %}Add Product{% endblock %}{% block content %}
+<section class="wrap admin"><div class="heading"><h1>Add Jewellery Product</h1><a href="{{url_for('dashboard')}}">← Dashboard</a></div>
+<form class="panel" method="post" enctype="multipart/form-data"><div class="admin-grid"><div>
+<label>Product name<input name="name" required placeholder="22K Floral Gold Ring"></label>
+<label>Metal<select name="metal" id="metal" onchange="toggleCarat()"><option>Gold</option><option>Silver</option><option>Diamond</option></select></label>
+<label>Category<select name="category"><option>Gold Set</option><option>Gold Ring</option><option>Gold Chain</option><option>Gold Accessories</option><option>Silver Set</option><option>Silver Ring</option><option>Silver Chain</option><option>Silver Accessories</option><option>Diamond Set</option><option>Diamond Ring</option><option>Diamond Chain</option><option>Diamond Accessories</option></select></label>
+<label id="caratLabel">Gold Carat<select name="carat"><option value="24">24K</option><option value="22" selected>22K</option><option value="18">18K</option><option value="14">14K</option></select></label>
+<label>Metal weight (grams)<input name="weight" type="number" step="0.001" required></label>
+<label>Making charges ₹<input name="making_charges" type="number" step="0.01" value="0"></label>
+<label>Stone charges ₹<input name="stone_charges" type="number" step="0.01" value="0"></label>
+<label>Other charges ₹<input name="other_charges" type="number" step="0.01" value="0"></label>
+</div><div>
+<label>Internal cost price ₹ <span class="note">(admin only)</span><input name="cost_price" type="number" step="0.01"></label>
+<label>MRP / list price ₹<input name="mrp" type="number" step="0.01" required></label>
+<label>Selling price ₹<input name="selling_price" type="number" step="0.01" required></label>
+<label>Product image<input name="image" type="file" accept=".jpg,.jpeg,.png,.webp"></label>
+<label>Description<textarea name="description" rows="7"></textarea></label>
+<div class="rate-preview">Today's 22K rate: ₹{{"{:,.2f}".format(latest_rate.gold_24k*22/24)}}/g<br>Today's 18K rate: ₹{{"{:,.2f}".format(latest_rate.gold_24k*18/24)}}/g</div>
+<button class="btn gold full">Save Product</button></div></div></form></section>
+<script>function toggleCarat(){document.getElementById('caratLabel').style.display=document.getElementById('metal').value==='Gold'?'block':'none'}toggleCarat()</script>
+{% endblock %}

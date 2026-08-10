@@ -1,0 +1,7 @@
+
+{% extends "base.html" %}{% block title %}{{p.name}} — Sukhi Jewellers{% endblock %}{% block content %}
+<section class="wrap product-page"><div class="product-image">{% if p.image_filename %}<img src="{{url_for('static',filename='uploads/'+p.image_filename)}}" alt="{{p.name}}">{% else %}<div class="placeholder">Jewellery Image</div>{% endif %}</div>
+<div><small>{{p.category}}</small><h1>{{p.name}}</h1><div class="price big">₹{{"{:,.0f}".format(p.selling_price)}} <del>₹{{"{:,.0f}".format(p.mrp)}}</del></div>{% set vals=price_data(p,rate) %}<p class="discount">{{"{:.0f}".format(vals[2])}}% OFF • Save ₹{{"{:,.0f}".format(vals[1])}}</p><hr>
+<table><tr><td>Metal</td><td>{{p.metal}}</td></tr>{% if p.carat %}<tr><td>Purity</td><td>{{p.carat|int}}K</td></tr><tr><td>Today's {{p.carat|int}}K rate</td><td>₹{{"{:,.2f}".format(rate.gold_24k*p.carat/24)}}/g</td></tr>{% endif %}<tr><td>Metal weight</td><td>{{p.weight}} g</td></tr>{% if p.metal=='Gold' %}<tr><td>Calculated metal value</td><td>₹{{"{:,.2f}".format(vals[0])}}</td></tr>{% endif %}<tr><td>Making charges</td><td>₹{{"{:,.0f}".format(p.making_charges)}}</td></tr></table>
+<p>{{p.description}}</p><button class="btn gold">Add to Cart</button> <button class="btn dark">Enquire on WhatsApp</button></div></section>
+{% endblock %}

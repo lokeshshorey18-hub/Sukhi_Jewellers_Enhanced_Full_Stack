@@ -183,5 +183,7 @@ def checkout():
     data=request.get_json(silent=True) or {}; amount=float(data.get('amount') or 0)
     if amount<=0:return jsonify(ok=False,error='Invalid amount'),400
     c=db(); cur=c.execute('INSERT INTO orders(customer_name,email,phone,amount,status,created_at) VALUES(?,?,?,?,?,?)',(data.get('name','Customer'),data.get('email',''),data.get('phone',''),amount,'Payment Pending',datetime.now().isoformat())); c.commit(); oid=cur.lastrowid; c.close(); return jsonify(ok=True,order_id=oid,message='Order created. Connect Razorpay server-side here.')
+# Initialize the database when the application starts.
+# This is required for both local Flask and Gunicorn/Render.
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

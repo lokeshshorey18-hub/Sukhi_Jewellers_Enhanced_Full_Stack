@@ -1,0 +1,75 @@
+{% extends 'base.html' %}{% block title %}Manage Section: {{section.title}} — Sukhi Jewellers{% endblock %}{% block content %}
+<section class="wrap admin">
+  <div class="heading">
+    <div>
+      <h1>{{section.title}}</h1>
+      <p>Manage which products appear in this homepage section, and their order.</p>
+    </div>
+    <a class="btn dark" href="{{url_for('admin_sections')}}">← Sections</a>
+  </div>
+
+  <div class="panel">
+    <h2>Products in this Section</h2>
+    {% if items %}
+      <div class="section-list">
+        {% for it in items %}
+          <div class="section-row">
+            <div class="section-view" id="view-{{it.id}}">
+              <div class="section-move">
+                <form method="post" action="{{url_for('move_section_product',sid=section.id,spid=it.id,direction='up')}}"><button class="linkbtn" title="Move up">▲</button></form>
+                <form method="post" action="{{url_for('move_section_product',sid=section.id,spid=it.id,direction='down')}}"><button class="linkbtn" title="Move down">▼</button></form>
+              </div>
+              <div class="section-info">
+                <b>{{it.short_name or it.product_name}}</b>
+                <span class="muted">({{it.product_name}})</span>
+                {% if it.display_price %}<span class="tag">₹{{"{:,.0f}".format(it.display_price)}}</span>{% endif %}
+              </div>
+              <div class="section-actions">
+                <button type="button" class="linkbtn" onclick="toggleEdit({{it.id}})" title="Edit">✎ Edit</button>
+                <form method="post" action="{{url_for('delete_section_product',sid=section.id,spid=it.id)}}" onsubmit="return confirm('Remove this product from the section?')" style="display:inline;">
+                  <button class="linkbtn danger" title="Remove">🗑 Remove</button>
+                </form>
+              </div>
+            </div>
+            <form class="section-edit" id="edit-{{it.id}}" method="post" action="{{url_for('edit_section_product',sid=section.id,spid=it.id)}}" style="display:none;">
+              <label>Display Name (optional)<input name="short_name" value="{{it.short_name}}" placeholder="{{it.product_name}}"></label>
+              <label>Display Price (optional)<input name="display_price" type="number" step="0.01" value="{{it.display_price or ''}}" placeholder="Uses product's selling price"></label>
+              <div class="section-edit-actions">
+                <button class="btn gold" type="submit">Save</button>
+                <button class="btn dark" type="button" onclick="toggleEdit({{it.id}})">Cancel</button>
+              </div>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No products in this section yet. Add one below.</p>
+    {% endif %}
+  </div>
+
+  <form class="panel" method="post">
+    <h2>+ Add Product to Section</h2>
+    <div class="admin-grid">
+      <label>Product
+        <select name="product_id" required>
+          <option value="">Select a product…</option>
+          {% for p in all_products %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Display Name (optional)<input name="short_name" placeholder="Overrides product name on homepage"></label>
+      <label>Display Price (optional)<input name="display_price" type="number" step="0.01" placeholder="Overrides selling price on homepage"></label>
+    </div>
+    <button class="btn gold">Add to Section</button>
+  </form>
+</section>
+
+<script>
+function toggleEdit(id){
+  var view=document.getElementById('view-'+id);
+  var edit=document.getElementById('edit-'+id);
+  var showEdit=edit.style.display==='none';
+  edit.style.display=showEdit?'flex':'none';
+  view.style.display=showEdit?'none':'flex';
+}
+</script>
+{% endblock %}

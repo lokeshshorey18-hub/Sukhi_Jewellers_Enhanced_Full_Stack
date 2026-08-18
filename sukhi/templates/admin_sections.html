@@ -1,0 +1,82 @@
+{% extends 'base.html' %}{% block title %}Homepage Sections — Sukhi Jewellers{% endblock %}{% block content %}
+<section class="wrap admin">
+  <div class="heading">
+    <div>
+      <h1>Homepage Sections</h1>
+      <p>Add, edit, reorder and manage the product sections shown on your homepage.</p>
+    </div>
+    <a class="btn dark" href="/admin">← Dashboard</a>
+  </div>
+
+  <div class="panel">
+    <h2>Current Sections</h2>
+    {% if sections %}
+      <div class="section-list">
+        {% for s in sections %}
+          <div class="section-row">
+            <div class="section-view" id="view-{{s.id}}">
+              <div class="section-move">
+                <form method="post" action="{{url_for('move_section',sid=s.id,direction='up')}}"><button class="linkbtn" title="Move up">▲</button></form>
+                <form method="post" action="{{url_for('move_section',sid=s.id,direction='down')}}"><button class="linkbtn" title="Move down">▼</button></form>
+              </div>
+              <div class="section-info">
+                <b>{{s.title}}</b>
+                <span class="tag">{{s.section_type}}</span>
+                {% if not s.active %}<span class="tag off">Hidden</span>{% endif %}
+                <span class="muted">{{counts.get(s.id,0)}} product(s)</span>
+              </div>
+              <div class="section-actions">
+                <a class="linkbtn" href="{{url_for('admin_section_products',sid=s.id)}}">Manage Products</a>
+                <button type="button" class="linkbtn" onclick="toggleEdit({{s.id}})" title="Edit section">✎ Edit</button>
+                <form method="post" action="{{url_for('delete_section',sid=s.id)}}" onsubmit="return confirm('Delete this section and its product list?')" style="display:inline;">
+                  <button class="linkbtn danger" title="Delete section">🗑 Delete</button>
+                </form>
+              </div>
+            </div>
+            <form class="section-edit" id="edit-{{s.id}}" method="post" action="{{url_for('edit_section',sid=s.id)}}" style="display:none;">
+              <label>Title<input name="title" value="{{s.title}}" required></label>
+              <label>Type
+                <select name="section_type">
+                  <option value="products" {% if s.section_type=='products' %}selected{% endif %}>Products</option>
+                  <option value="price" {% if s.section_type=='price' %}selected{% endif %}>Shop by Price</option>
+                </select>
+              </label>
+              <label class="checkbox"><input type="checkbox" name="active" {% if s.active %}checked{% endif %}> Visible on homepage</label>
+              <div class="section-edit-actions">
+                <button class="btn gold" type="submit">Save</button>
+                <button class="btn dark" type="button" onclick="toggleEdit({{s.id}})">Cancel</button>
+              </div>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No homepage sections yet. Add one below to get started.</p>
+    {% endif %}
+  </div>
+
+  <form class="panel" method="post">
+    <h2>+ Add New Section</h2>
+    <div class="admin-grid">
+      <label>Title<input name="title" required placeholder="e.g., New Arrivals"></label>
+      <label>Type
+        <select name="section_type">
+          <option value="products">Products</option>
+          <option value="price">Shop by Price</option>
+        </select>
+      </label>
+    </div>
+    <button class="btn gold">Add Section</button>
+  </form>
+</section>
+
+<script>
+function toggleEdit(id){
+  var view=document.getElementById('view-'+id);
+  var edit=document.getElementById('edit-'+id);
+  var showEdit=edit.style.display==='none';
+  edit.style.display=showEdit?'flex':'none';
+  view.style.display=showEdit?'none':'flex';
+}
+</script>
+{% endblock %}

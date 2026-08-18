@@ -184,6 +184,69 @@ def delete_hero(sid):
     return redirect(url_for('admin_site'))
 
 
+@app.route('/admin/sections',methods=['GET','POST'])
+@admin_required
+def admin_sections():
+    c=db()
+    if request.method=='POST':
+        nextn=c.execute('SELECT COALESCE(MAX(sort_order),-1)+1 n FROM home_sections').fetchone()['n']
+        c.execute('INSERT INTO home_sections(title,section_type,sort_order,active) VALUES(?,?,?,1)',(request.form.get('title','New Section'),request.form.get('section_type','products'),nextn))
+        c.commit(); c.close(); flash('Section added.','success'); return redirect(url_for('admin_sections'))
+    sections=c.execute('SELECT * FROM home_sections ORDER BY sort_order,id').fetchall()
+    counts={r['section_id']:r['n'] for r in c.execute('SELECT section_id,COUNT(*) n FROM section_products GROUP BY section_id').fetchall()}
+    c.close(); return render_template('admin_sections.html',sections=sections,counts=counts)
+@app.route('/admin/sections/<int:sid>/edit',methods=['POST'])
+@admin_required
+def edit_section(sid):
+    c=db(); c.execute('UPDATE home_sections SET title=?,section_type=?,active=? WHERE id=?',(request.form.get('title','').strip() or 'Untitled Section',request.form.get('section_type','products'),1 if request.form.get('active') else 0,sid)); c.commit(); c.close(); flash('Section updated.','success'); return redirect(url_for('admin_sections'))
+@app.route('/admin/sections/<int:sid>/move/<direction>',methods=['POST'])
+@admin_required
+def move_section(sid,direction):
+    c=db(); ids=[r['id'] for r in c.execute('SELECT id FROM home_sections ORDER BY sort_order,id').fetchall()]
+    if sid in ids:
+        i=ids.index(sid); j=i-1 if direction=='up' else i+1
+        if 0<=j<len(ids): ids[i],ids[j]=ids[j],ids[i]
+    for pos,rid in enumerate(ids): c.execute('UPDATE home_sections SET sort_order=? WHERE id=?',(pos,rid))
+    c.commit(); c.close(); return redirect(url_for('admin_sections'))
+@app.route('/admin/sections/<int:sid>/delete',methods=['POST'])
+@admin_required
+def delete_section(sid):
+    c=db(); c.execute('DELETE FROM section_products WHERE section_id=?',(sid,)); c.execute('DELETE FROM home_sections WHERE id=?',(sid,)); c.commit(); c.close(); flash('Section deleted.','success'); return redirect(url_for('admin_sections'))
+@app.route('/admin/sections/<int:sid>/products',methods=['GET','POST'])
+@admin_required
+def admin_section_products(sid):
+    c=db(); section=c.execute('SELECT * FROM home_sections WHERE id=?',(sid,)).fetchone()
+    if not section:
+        c.close(); flash('Section not found.','error'); return redirect(url_for('admin_sections'))
+    if request.method=='POST':
+        pid=request.form.get('product_id')
+        if pid:
+            nextn=c.execute('SELECT COALESCE(MAX(sort_order),-1)+1 n FROM section_products WHERE section_id=?',(sid,)).fetchone()['n']
+            c.execute('INSERT INTO section_products(section_id,product_id,short_name,display_price,sort_order) VALUES(?,?,?,?,?)',(sid,int(pid),request.form.get('short_name',''),float(request.form['display_price']) if request.form.get('display_price') else None,nextn))
+            c.commit(); flash('Product added to section.','success')
+        else:
+            flash('Please select a product.','error')
+        c.close(); return redirect(url_for('admin_section_products',sid=sid))
+    items=c.execute('SELECT sp.*,p.name product_name FROM section_products sp JOIN products p ON p.id=sp.product_id WHERE sp.section_id=? ORDER BY sp.sort_order,sp.id',(sid,)).fetchall()
+    all_products=c.execute('SELECT id,name FROM products WHERE active=1 ORDER BY name').fetchall()
+    c.close(); return render_template('admin_section_products.html',section=section,items=items,all_products=all_products)
+@app.route('/admin/sections/<int:sid>/products/<int:spid>/edit',methods=['POST'])
+@admin_required
+def edit_section_product(sid,spid):
+    c=db(); c.execute('UPDATE section_products SET short_name=?,display_price=? WHERE id=? AND section_id=?',(request.form.get('short_name',''),float(request.form['display_price']) if request.form.get('display_price') else None,spid,sid)); c.commit(); c.close(); flash('Item updated.','success'); return redirect(url_for('admin_section_products',sid=sid))
+@app.route('/admin/sections/<int:sid>/products/<int:spid>/move/<direction>',methods=['POST'])
+@admin_required
+def move_section_product(sid,spid,direction):
+    c=db(); ids=[r['id'] for r in c.execute('SELECT id FROM section_products WHERE section_id=? ORDER BY sort_order,id',(sid,)).fetchall()]
+    if spid in ids:
+        i=ids.index(spid); j=i-1 if direction=='up' else i+1
+        if 0<=j<len(ids): ids[i],ids[j]=ids[j],ids[i]
+    for pos,rid in enumerate(ids): c.execute('UPDATE section_products SET sort_order=? WHERE id=?',(pos,rid))
+    c.commit(); c.close(); return redirect(url_for('admin_section_products',sid=sid))
+@app.route('/admin/sections/<int:sid>/products/<int:spid>/delete',methods=['POST'])
+@admin_required
+def delete_section_product(sid,spid):
+    c=db(); c.execute('DELETE FROM section_products WHERE id=? AND section_id=?',(spid,sid)); c.commit(); c.close(); flash('Removed from section.','success'); return redirect(url_for('admin_section_products',sid=sid))
 @app.route('/admin/nav',methods=['GET','POST'])
 @admin_required
 def admin_nav():

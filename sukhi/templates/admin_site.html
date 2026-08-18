@@ -15,48 +15,69 @@
         <h2>Brand & Marquee</h2>
         <label>Brand Name<input name="brand_name" value="{{settings.brand_name}}"></label>
         <label>Latest News / Marquee<input name="announcement" value="{{settings.announcement}}"></label>
+        <h2 style="margin-top: 24px;">Add Initial Hero Image</h2>
+        <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">Upload an image to display when the hero carousel first loads. This appears as the background for "Timeless jewellery, made for you".</p>
+        <label>Initial Hero Title<input name="initial_hero_title" placeholder="e.g., Timeless jewellery, made for you" value="{{settings.get('initial_hero_title', '')}}"></label>
+        <label>Initial Hero Subtitle<input name="initial_hero_subtitle" placeholder="e.g., Discover our latest collection" value="{{settings.get('initial_hero_subtitle', '')}}"></label>
+        <label>Upload Initial Hero Image (JPG, PNG, WebP)<input name="initial_hero_image" type="file" accept=".jpg,.jpeg,.png,.webp"></label>
+        <button type="submit" class="btn gold full" style="margin-top: 8px;">Save Settings</button>
+      </div>
+      <div>
         <h2>Social Links</h2>
         {% for key in ['instagram','facebook','youtube','pinterest','snapchat'] %}
           <label>{{key|capitalize}} URL<input name="{{key}}" value="{{settings[key]}}" placeholder="https://..."></label>
         {% endfor %}
       </div>
-      <div>
-        <h2>Add Carousel Image</h2>
-        <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">Upload an image to display in the hero carousel. Images will rotate every 3 seconds.</p>
-        <label>Image Title<input name="hero_title" placeholder="e.g., Timeless jewellery, made for you" required></label>
-        <label>Image Subtitle<input name="hero_subtitle" placeholder="e.g., Discover our latest collection"></label>
-        <label>Upload Image (JPG, PNG, WebP)<input name="hero_image" type="file" accept=".jpg,.jpeg,.png,.webp" required></label>
-        <button class="btn gold full">+ Add Image to Carousel</button>
-      </div>
     </div>
   </form>
+
+  <!-- Add More Carousel Images Section -->
+  <div class="panel">
+    <h2>Add More Carousel Images</h2>
+    <form method="post" enctype="multipart/form-data">
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end;">
+        <label style="margin: 0;">
+          Image Title
+          <input name="hero_title" placeholder="e.g., Summer Collection" required style="margin-top: 4px;">
+        </label>
+        <label style="margin: 0;">
+          Image Subtitle
+          <input name="hero_subtitle" placeholder="e.g., Limited edition pieces" style="margin-top: 4px;">
+        </label>
+        <label style="margin: 0;">
+          Upload Image
+          <input name="hero_image" type="file" accept=".jpg,.jpeg,.png,.webp" required style="margin-top: 4px;">
+        </label>
+        <button type="submit" class="btn gold" style="padding: 10px 16px;">+ Add</button>
+      </div>
+    </form>
+  </div>
 
   <!-- Existing Carousel Images -->
   <div class="panel">
     <h2>Carousel Images</h2>
     {% if slides %}
-      <div style="display: grid; gap: 20px;">
+      <div style="display: grid; gap: 16px;">
         {% for s in slides %}
-          <div style="display: grid; grid-template-columns: 150px 1fr auto; gap: 20px; align-items: center; padding: 16px; border: 1px solid var(--line); border-radius: 4px;">
+          <div style="display: grid; grid-template-columns: 120px 1fr auto; gap: 16px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 4px;">
             <!-- Image Thumbnail -->
             <div>
               {% if s.image_filename %}
-                <img src="{{url_for('static',filename='uploads/'+s.image_filename)}}" alt="{{s.title}}" style="width: 150px; height: 100px; object-fit: cover; border-radius: 2px; display: block;">
+                <img src="{{url_for('static',filename='uploads/'+s.image_filename)}}" alt="{{s.title}}" style="width: 120px; height: 80px; object-fit: cover; border-radius: 2px; display: block;">
               {% else %}
-                <div style="width: 150px; height: 100px; background: var(--line); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted);">No Image</div>
+                <div style="width: 120px; height: 80px; background: var(--line); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted);">No Image</div>
               {% endif %}
             </div>
 
             <!-- Image Details -->
             <div>
-              <h3 style="margin: 0 0 6px; font-size: 15px;">{{s.title}}</h3>
-              <p style="margin: 0 0 8px; font-size: 13px; color: var(--muted);">{{s.subtitle}}</p>
-              <small style="color: #999;">Uploaded: {{s.created_at or 'N/A'}}</small>
+              <h3 style="margin: 0 0 4px; font-size: 14px; font-weight: 600;">{{s.title}}</h3>
+              <p style="margin: 0; font-size: 13px; color: var(--muted);">{{s.subtitle}}</p>
             </div>
 
             <!-- Delete Button -->
             <form method="post" action="{{url_for('delete_hero', sid=s.id)}}" style="margin: 0;">
-              <button type="submit" class="btn dark" onclick="return confirm('Delete this carousel image?');" style="background: #e74c3c; padding: 8px 12px; font-size: 12px;">🗑 Delete</button>
+              <button type="submit" class="btn dark" onclick="return confirm('Delete this carousel image?');" style="background: #e74c3c; padding: 8px 12px; font-size: 12px; white-space: nowrap;">🗑 Delete</button>
             </form>
           </div>
         {% endfor %}
@@ -86,7 +107,7 @@
     gap: 6px;
     font-weight: 500;
     font-size: 13px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
 
   .admin-grid label input {
@@ -104,16 +125,12 @@
 
   .admin-grid h2 {
     font-size: 16px;
-    margin: 20px 0 16px;
+    margin: 0 0 16px;
     font-weight: 600;
   }
 
-  .admin-grid h2:first-child {
-    margin-top: 0;
-  }
-
   .panel h2 {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     font-size: 18px;
     font-weight: 600;
   }
@@ -126,6 +143,8 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     transition: all 0.3s;
+    border: none;
+    cursor: pointer;
   }
 
   .btn.gold {

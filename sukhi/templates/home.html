@@ -1,6 +1,100 @@
 {% extends 'base.html' %}{% block title %}Sukhi Jewellers — Jewellery for Your Story{% endblock %}{% block content %}
-<section class="hero-slider">{% for slide in hero_slides %}<div class="hero-slide">{% if slide.image_filename %}<img src="{{url_for('static',filename='uploads/'+slide.image_filename)}}" alt="{{slide.title}}">{% else %}<div class="hero-art">SUKHI<br>JEWELLERS</div>{% endif %}<div class="hero-copy"><small>TIMELESS • TRUSTED • CRAFTED</small><h1>{{slide.title}}</h1><p>{{slide.subtitle}}</p><a class="btn gold" href="#collections">Explore Collection</a></div></div>{% endfor %}</section>
+<section class="hero-slider">
+  <div class="carousel-background">
+    {% for slide in hero_slides %}
+      <div class="carousel-slide" data-slide-index="{{ loop.index0 }}">
+        {% if slide.image_filename %}
+          <img src="{{url_for('static',filename='uploads/'+slide.image_filename)}}" alt="{{slide.title}}" class="slide-bg-img">
+        {% else %}
+          <div class="hero-art-bg">SUKHI<br>JEWELLERS</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  
+  <div class="carousel-dots">
+    {% for slide in hero_slides %}
+      <button class="dot" data-slide="{{ loop.index0 }}" {% if loop.first %}class="dot active"{% endif %}></button>
+    {% endfor %}
+  </div>
+
+  {% for slide in hero_slides %}
+    <div class="hero-slide">
+      {% if slide.image_filename %}
+        <img src="{{url_for('static',filename='uploads/'+slide.image_filename)}}" alt="{{slide.title}}">
+      {% else %}
+        <div class="hero-art">SUKHI<br>JEWELLERS</div>
+      {% endif %}
+      <div class="hero-copy">
+        <small>TIMELESS • TRUSTED • CRAFTED</small>
+        <h1>{{slide.title}}</h1>
+        <p>{{slide.subtitle}}</p>
+        <a class="btn gold" href="#collections">Explore Collection</a>
+      </div>
+    </div>
+  {% endfor %}
+</section>
+
 <section class="wrap" id="collections"><div class="section-title"><div><h2>Manifested by You. Crafted by Us.</h2><p>Discover pieces designed to become part of your everyday stories.</p></div></div><div class="category-strip">{% for cat in ['Pendants','Nose Rings','Earrings','Rings','Bracelets','Anklets','Chains','Rakhis'] %}<a class="mini-cat" href="{{url_for('category',category=cat.lower().replace(' ','-'))}}">{{cat}}</a>{% endfor %}</div></section>
+
 <section class="wrap"><div class="section-title"><h2>Featured Jewellery</h2><a class="view-all" href="/new-arrivals">View All →</a></div><div class="horizontal-products">{% for p in products[:10] %}{% set vals=price_data(p,rate) %}<article class="card">{% if p.image_filename %}<img src="{{url_for('static',filename='uploads/'+p.image_filename)}}" alt="{{p.name}}">{% else %}<div class="placeholder">Jewellery Image</div>{% endif %}<div class="body"><small>{{p.category}}</small><h3>{{p.name}}</h3><div class="price">₹{{'{:,.0f}'.format(p.selling_price)}} <del>₹{{'{:,.0f}'.format(p.mrp)}}</del></div><b class="discount">{{'{:.0f}'.format(vals[2])}}% OFF</b><a class="btn dark full" href="{{url_for('product',pid=p.id)}}">View</a></div></article>{% endfor %}</div></section>
+
 <section class="wrap"><div class="section-title"><h2>Shop by Price</h2></div><div class="price-boxes">{% for amount in [999,1999,2999] %}<a href="{{url_for('price_page',max_price=amount)}}"><strong>Under ₹{{amount}}</strong><span>Explore jewellery</span></a>{% endfor %}</div></section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const carouselSection = document.querySelector('.carousel-background');
+  const slides = document.querySelectorAll('.carousel-slide');
+  const dots = document.querySelectorAll('.carousel-dots .dot');
+  let currentSlide = 0;
+  let autoplayInterval;
+  let isHovering = false;
+
+  function showSlide(n) {
+    slides.forEach(slide => slide.classList.remove('active'));
+    dots.forEach(dot => dot.classList.remove('active'));
+    
+    if (n >= slides.length) currentSlide = 0;
+    if (n < 0) currentSlide = slides.length - 1;
+    
+    slides[currentSlide].classList.add('active');
+    dots[currentSlide].classList.add('active');
+  }
+
+  function nextSlide() {
+    currentSlide++;
+    showSlide(currentSlide);
+  }
+
+  function startAutoplay() {
+    autoplayInterval = setInterval(nextSlide, 3000);
+  }
+
+  function stopAutoplay() {
+    clearInterval(autoplayInterval);
+  }
+
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', function() {
+      currentSlide = index;
+      showSlide(currentSlide);
+      stopAutoplay();
+      startAutoplay();
+    });
+  });
+
+  carouselSection.addEventListener('mouseenter', function() {
+    isHovering = true;
+    stopAutoplay();
+  });
+
+  carouselSection.addEventListener('mouseleave', function() {
+    isHovering = false;
+    startAutoplay();
+  });
+
+  showSlide(currentSlide);
+  startAutoplay();
+});
+</script>
 {% endblock %}

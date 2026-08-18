@@ -2,7 +2,7 @@
 <section class="hero-slider">
   <div class="carousel-background">
     {% for slide in hero_slides %}
-      <div class="carousel-slide" data-slide-index="{{ loop.index0 }}">
+      <div class="carousel-slide{% if loop.first %} active{% endif %}" data-slide-index="{{ loop.index0 }}">
         {% if slide.image_filename %}
           <img src="{{url_for('static',filename='uploads/'+slide.image_filename)}}" alt="{{slide.title}}" class="slide-bg-img">
         {% else %}
@@ -14,7 +14,7 @@
   
   <div class="carousel-dots">
     {% for slide in hero_slides %}
-      <button class="dot" data-slide="{{ loop.index0 }}" {% if loop.first %}class="dot active"{% endif %}></button>
+      <button class="dot{% if loop.first %} active{% endif %}" data-slide="{{ loop.index0 }}"></button>
     {% endfor %}
   </div>
 

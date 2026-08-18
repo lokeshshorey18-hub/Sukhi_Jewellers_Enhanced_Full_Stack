@@ -17,9 +17,14 @@
         <label>Latest News / Marquee<input name="announcement" value="{{settings.announcement}}"></label>
         <h2 style="margin-top: 24px;">Add Initial Hero Image</h2>
         <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">Upload an image to display when the hero carousel first loads. This appears as the background for "Timeless jewellery, made for you".</p>
-        <label>Initial Hero Title<input name="initial_hero_title" placeholder="e.g., Timeless jewellery, made for you" value="{{settings.get('initial_hero_title', '')}}"></label>
-        <label>Initial Hero Subtitle<input name="initial_hero_subtitle" placeholder="e.g., Discover our latest collection" value="{{settings.get('initial_hero_subtitle', '')}}"></label>
+        <label>Initial Hero Title<input name="initial_hero_title" placeholder="e.g., Timeless jewellery, made for you" value="{{settings['initial_hero_title'] or ''}}"></label>
+        <label>Initial Hero Subtitle<input name="initial_hero_subtitle" placeholder="e.g., Discover our latest collection" value="{{settings['initial_hero_subtitle'] or ''}}"></label>
         <label>Upload Initial Hero Image (JPG, PNG, WebP)<input name="initial_hero_image" type="file" accept=".jpg,.jpeg,.png,.webp"></label>
+        {% if settings['initial_hero_image'] %}
+          <div style="margin-top: 8px;">
+            <img src="{{url_for('static',filename='uploads/'+settings['initial_hero_image'])}}" alt="Initial hero image" style="width: 160px; height: 100px; object-fit: cover; border-radius: 2px; display: block;">
+          </div>
+        {% endif %}
         <button type="submit" class="btn gold full" style="margin-top: 8px;">Save Settings</button>
       </div>
       <div>

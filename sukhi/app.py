@@ -19,7 +19,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS metal_rates(id INTEGER PRIMARY KEY AUTOINCREMENT,rate_date TEXT UNIQUE NOT NULL,gold_24k REAL NOT NULL,silver REAL NOT NULL DEFAULT 0,created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS products(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,metal TEXT NOT NULL,category TEXT NOT NULL,carat REAL,weight REAL NOT NULL DEFAULT 0,making_charges REAL NOT NULL DEFAULT 0,stone_charges REAL NOT NULL DEFAULT 0,other_charges REAL NOT NULL DEFAULT 0,cost_price REAL NOT NULL DEFAULT 0,mrp REAL NOT NULL DEFAULT 0,selling_price REAL NOT NULL DEFAULT 0,description TEXT DEFAULT '',image_filename TEXT DEFAULT '',active INTEGER NOT NULL DEFAULT 1,best_seller INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS orders(id INTEGER PRIMARY KEY AUTOINCREMENT,customer_name TEXT NOT NULL,email TEXT,phone TEXT,amount REAL NOT NULL,status TEXT NOT NULL DEFAULT 'Pending',payment_id TEXT,created_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS site_settings(id INTEGER PRIMARY KEY CHECK(id=1),brand_name TEXT NOT NULL DEFAULT 'Sukhi Jewellers',announcement TEXT DEFAULT '',instagram TEXT DEFAULT '',facebook TEXT DEFAULT '',youtube TEXT DEFAULT '',pinterest TEXT DEFAULT '',snapchat TEXT DEFAULT '');
+    CREATE TABLE IF NOT EXISTS site_settings(id INTEGER PRIMARY KEY CHECK(id=1),brand_name TEXT NOT NULL DEFAULT 'Sukhi Jewellers',announcement TEXT DEFAULT '',instagram TEXT DEFAULT '',facebook TEXT DEFAULT '',youtube TEXT DEFAULT '',pinterest TEXT DEFAULT '',snapchat TEXT DEFAULT '',initial_hero_title TEXT DEFAULT '',initial_hero_subtitle TEXT DEFAULT '',initial_hero_image TEXT DEFAULT '');
     CREATE TABLE IF NOT EXISTS hero_slides(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT DEFAULT '',subtitle TEXT DEFAULT '',image_filename TEXT DEFAULT '',link_url TEXT DEFAULT '',active INTEGER NOT NULL DEFAULT 1,sort_order INTEGER NOT NULL DEFAULT 0);
     CREATE TABLE IF NOT EXISTS nav_items(id INTEGER PRIMARY KEY AUTOINCREMENT,label TEXT NOT NULL,parent_id INTEGER,url TEXT DEFAULT '',sort_order INTEGER NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1);
     CREATE TABLE IF NOT EXISTS home_sections(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,section_type TEXT NOT NULL DEFAULT 'products',sort_order INTEGER NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1);
@@ -27,6 +27,10 @@ def init_db():
     ''')
     cols=[r['name'] for r in c.execute('PRAGMA table_info(products)').fetchall()]
     if 'best_seller' not in cols: c.execute('ALTER TABLE products ADD COLUMN best_seller INTEGER NOT NULL DEFAULT 0')
+    site_cols=[r['name'] for r in c.execute('PRAGMA table_info(site_settings)').fetchall()]
+    if 'initial_hero_title' not in site_cols: c.execute("ALTER TABLE site_settings ADD COLUMN initial_hero_title TEXT DEFAULT ''")
+    if 'initial_hero_subtitle' not in site_cols: c.execute("ALTER TABLE site_settings ADD COLUMN initial_hero_subtitle TEXT DEFAULT ''")
+    if 'initial_hero_image' not in site_cols: c.execute("ALTER TABLE site_settings ADD COLUMN initial_hero_image TEXT DEFAULT ''")
     if not c.execute('SELECT 1 FROM admins LIMIT 1').fetchone():
         c.execute('INSERT INTO admins(username,password_hash) VALUES(?,?)',(os.environ.get('ADMIN_USER','admin'),generate_password_hash(os.environ.get('ADMIN_PASSWORD','ChangeMe123!'))))
     today=datetime.now().strftime('%Y-%m-%d')
@@ -133,7 +137,18 @@ def delete_product(pid): c=db(); c.execute('UPDATE products SET active=0 WHERE i
 def admin_site():
     c=db()
     if request.method=='POST':
-        c.execute('UPDATE site_settings SET brand_name=?,announcement=?,instagram=?,facebook=?,youtube=?,pinterest=?,snapchat=? WHERE id=1',(request.form.get('brand_name','Sukhi Jewellers'),request.form.get('announcement',''),request.form.get('instagram',''),request.form.get('facebook',''),request.form.get('youtube',''),request.form.get('pinterest',''),request.form.get('snapchat','')))
+        initial_hero_fn=None
+        f0=request.files.get('initial_hero_image')
+        if f0 and f0.filename:
+            ext=f0.filename.rsplit('.',1)[-1].lower()
+            if ext in ALLOWED:
+                initial_hero_fn=secure_filename(f'initial_hero_{secrets.token_hex(8)}.{ext}'); f0.save(os.path.join(UPLOADS,initial_hero_fn))
+            else:
+                flash('Unsupported image type for Initial Hero Image.','error')
+        if initial_hero_fn:
+            c.execute('UPDATE site_settings SET brand_name=?,announcement=?,instagram=?,facebook=?,youtube=?,pinterest=?,snapchat=?,initial_hero_title=?,initial_hero_subtitle=?,initial_hero_image=? WHERE id=1',(request.form.get('brand_name','Sukhi Jewellers'),request.form.get('announcement',''),request.form.get('instagram',''),request.form.get('facebook',''),request.form.get('youtube',''),request.form.get('pinterest',''),request.form.get('snapchat',''),request.form.get('initial_hero_title',''),request.form.get('initial_hero_subtitle',''),initial_hero_fn))
+        else:
+            c.execute('UPDATE site_settings SET brand_name=?,announcement=?,instagram=?,facebook=?,youtube=?,pinterest=?,snapchat=?,initial_hero_title=?,initial_hero_subtitle=? WHERE id=1',(request.form.get('brand_name','Sukhi Jewellers'),request.form.get('announcement',''),request.form.get('instagram',''),request.form.get('facebook',''),request.form.get('youtube',''),request.form.get('pinterest',''),request.form.get('snapchat',''),request.form.get('initial_hero_title',''),request.form.get('initial_hero_subtitle','')))
         f=request.files.get('hero_image')
         if f and f.filename:
             ext=f.filename.rsplit('.',1)[-1].lower()
